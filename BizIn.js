@@ -952,11 +952,13 @@ function initPasswordToggle(){
 }
 
 /* =============================================================
-   18. DARK MODE  —  circular clip-path wipe from toggle origin
+   18. DARK MODE  —  circular reveal (transform:scale) from toggle origin
    ============================================================= */
 function initDarkMode(){
   var btn   = document.getElementById('theme-toggle');
+  var track = btn.querySelector('.theme-toggle-track');
   var wipe  = document.getElementById('theme-wipe');
+  var circle = wipe.querySelector('.wipe-circle');
   var saved = localStorage.getItem('BizIn_theme');
 
   // Apply saved or system preference
@@ -966,7 +968,7 @@ function initDarkMode(){
   // Keep wipe layer background in sync so it shows the NEW theme colour
   function syncWipeBg(){
     var goingDark = !document.body.classList.contains('dark'); // about to toggle TO dark
-    wipe.style.background = goingDark
+    circle.style.background = goingDark
       ? 'linear-gradient(135deg, #0D1824 60%, #141E28)'
       : 'linear-gradient(135deg, #F4F1E4 60%, #ECE7D4)';
   }
@@ -980,16 +982,22 @@ function initDarkMode(){
     wipe.style.setProperty('--wx', xPct);
     wipe.style.setProperty('--wy', yPct);
 
-    // Reset animation so it can re-fire
+    // Little pulse ring on the switch itself, for tactile feedback at the origin
+    track.classList.remove('pulse');
+    void track.offsetWidth; // force reflow so the animation can re-fire
+    track.classList.add('pulse');
+
+    // Reset wipe animation so it can re-fire
     wipe.classList.remove('wipe-active');
-    void wipe.offsetWidth;                 // force reflow
+    void circle.offsetWidth;               // force reflow
     wipe.classList.add('wipe-active');
 
-    // Toggle theme at ~30% through the wipe (feels seamless)
+    // Toggle theme once the circle has covered enough of the screen to hide the switch
+    // (tuned to the new, slightly longer .68s duration)
     setTimeout(function(){
       document.body.classList.toggle('dark');
       localStorage.setItem('BizIn_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    }, 160);
+    }, 190);
 
     // Clean up after animation
     wipe.addEventListener('animationend', function handler(){
